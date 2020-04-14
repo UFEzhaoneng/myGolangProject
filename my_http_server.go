@@ -7,16 +7,15 @@ import (
 	"net/http"
 	"time"
 
+	pb "./proto"
 	"google.golang.org/grpc"
-
-	pb "./helloWorldProto"
 )
 
 const (
 	gprcAddress = "localhost:50051"
 )
 
-func connectWithGRPC(name string) string {
+func connectWithGrpc(name string) string {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(gprcAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
@@ -37,11 +36,9 @@ func connectWithGRPC(name string) string {
 }
 
 func main() {
-
 	// Hello world, the web server
-
 	helloHandler := func(w http.ResponseWriter, req *http.Request) {
-		io.WriteString(w, connectWithGRPC(req.RemoteAddr))
+		io.WriteString(w, connectWithGrpc(req.RemoteAddr))
 	}
 
 	http.HandleFunc("/hello", helloHandler)
