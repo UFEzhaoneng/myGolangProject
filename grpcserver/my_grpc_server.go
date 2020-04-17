@@ -55,6 +55,7 @@ func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.Regi
 	return &pb.RegisterReply{Id: newStudent.id}, nil
 }
 
+//查询学生信息
 func (s *Server) Query(_ context.Context, studentId *pb.StudentId) (*pb.StudentInfo, error) {
 	studentInfo, ok := allStudentInfo[studentId.Id]
 	if !ok {
@@ -70,6 +71,7 @@ func (s *Server) Query(_ context.Context, studentId *pb.StudentId) (*pb.StudentI
 	}, nil
 }
 
+//更改学生专业
 func (s *Server) AlterProfession(_ context.Context, studentId *pb.StudentId) (*pb.Result, error) {
 	studentInfo, ok := allStudentInfo[studentId.Id]
 	if !ok {
@@ -85,6 +87,7 @@ func (s *Server) AlterProfession(_ context.Context, studentId *pb.StudentId) (*p
 	return &pb.Result{Res: true}, nil
 }
 
+//删除学生信息
 func (s *Server) Delete(_ context.Context, studentId *pb.StudentId) (*pb.Result, error) {
 	_, ok := allStudentInfo[studentId.Id]
 	if !ok {
