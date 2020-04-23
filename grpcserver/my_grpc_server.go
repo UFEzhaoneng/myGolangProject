@@ -8,8 +8,8 @@ import (
 	"sort"
 	"time"
 
-	pb "../proto"
 	"google.golang.org/grpc"
+	pb "mygolangproject/proto"
 )
 
 const port = ":50051"

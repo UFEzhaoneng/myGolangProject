@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	pb "./proto"
 	"google.golang.org/grpc"
+	pb "mygolangproject/proto"
 )
 
 const (
