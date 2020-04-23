@@ -42,7 +42,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots3)
 
-	res4, err := http.PostForm("http://127.0.0.1:8088/delete", url.Values{"id": {"1"}})
+	/*res4, err := http.PostForm("http://127.0.0.1:8088/delete", url.Values{"id": {"1"}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,5 +51,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s\n", robots4)
+	fmt.Printf("%s\n", robots4)*/
+
+	res5, err := http.PostForm("http://127.0.0.1:8088/queryList", url.Values{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	robots5, err := ioutil.ReadAll(res5.Body)
+	res5.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s\n", robots5)
 }

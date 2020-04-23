@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 	"net"
+	"sort"
+	"time"
 
 	pb "../proto"
 	"google.golang.org/grpc"
@@ -22,14 +24,34 @@ const (
 )
 
 type student struct {
-	id         int32  //唯一
-	name       string //仅支持英文，非空
-	age        int32  //非空，范围【10，100】
-	profession string //枚举：计算机科学与技术/软件工程
+	id           int32  //唯一
+	name         string //仅支持英文，非空
+	age          int32  //非空，范围【10，100】
+	profession   string //枚举：计算机科学与技术/软件工程
+	createTime   int64  //创建时间
+	modifiedTime int64  //修改时间
 }
 
 var allStudentInfo = make(map[int32]student)
 var studentId = 0
+
+type studentList []student
+
+func (stu studentList) Swap(i, j int)      { stu[i], stu[j] = stu[j], stu[i] }
+func (stu studentList) Len() int           { return len(stu) }
+func (stu studentList) Less(i, j int) bool { return stu[i].createTime > stu[j].createTime }
+
+// A function to turn a map into a PairList, then sort and return it.
+func sortByCreateTime(m map[int32]student) studentList {
+	p := make(studentList, len(m))
+	i := 0
+	for _, v := range m {
+		p[i] = v
+		i++
+	}
+	sort.Sort(p)
+	return p
+}
 
 // SayHello implements helloworld.GreeterServer
 func (s *Server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
@@ -45,10 +67,12 @@ func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.Regi
 	}
 	studentId++
 	newStudent := student{
-		id:         int32(studentId),
-		name:       info.GetName(),
-		age:        info.GetAge(),
-		profession: info.GetProfession(),
+		id:           int32(studentId),
+		name:         info.GetName(),
+		age:          info.GetAge(),
+		profession:   info.GetProfession(),
+		createTime:   time.Now().Unix(),
+		modifiedTime: time.Now().Unix(),
 	}
 	allStudentInfo[newStudent.id] = newStudent
 	log.Printf("register %v success", newStudent.id)
@@ -83,6 +107,8 @@ func (s *Server) AlterProfession(_ context.Context, studentId *pb.StudentId) (*p
 	} else {
 		studentInfo.profession = computerScienceAndTechnology
 	}
+	studentInfo.modifiedTime = time.Now().Unix()
+	allStudentInfo[studentId.Id] = studentInfo
 	log.Printf("Alter student %v profession success", studentId.Id)
 	return &pb.Result{Res: true}, nil
 }
@@ -97,6 +123,24 @@ func (s *Server) Delete(_ context.Context, studentId *pb.StudentId) (*pb.Result,
 	delete(allStudentInfo, studentId.Id)
 	log.Printf("delete student %v success", studentId.Id)
 	return &pb.Result{Res: true}, nil
+}
+
+func (s *Server) QueryList(_ context.Context, _ *pb.QueryRequest) (*pb.StudentList, error) {
+	list := sortByCreateTime(allStudentInfo)
+	studentList := &pb.StudentList{}
+	for _, studentInfo := range list {
+		studentInfo := &pb.StudentInfo{
+			Id:           studentInfo.id,
+			Name:         studentInfo.name,
+			Age:          studentInfo.age,
+			Profession:   studentInfo.profession,
+			CreateTime:   studentInfo.createTime,
+			ModifiedTime: studentInfo.modifiedTime,
+		}
+		studentList.StudentInfo = append(studentList.StudentInfo, studentInfo)
+	}
+	log.Print("query list success")
+	return studentList, nil
 }
 
 func main() {

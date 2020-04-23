@@ -102,6 +102,14 @@ func idCheck(w http.ResponseWriter, req *http.Request) (int, bool) {
 	return id, true
 }
 
+func responseStudentInfo(w http.ResponseWriter, studentInfo *pb.StudentInfo) {
+	io.WriteString(w,
+		"id: "+strconv.Itoa(int(studentInfo.Id))+
+			" name: "+studentInfo.Name+
+			" age: "+strconv.Itoa(int(studentInfo.Age))+
+			" profession:"+studentInfo.Profession)
+}
+
 func queryHandler(w http.ResponseWriter, req *http.Request) {
 	id, res := idCheck(w, req)
 	if !res {
@@ -119,7 +127,7 @@ func queryHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("query: %v success", id)
-	io.WriteString(w, "id: "+strconv.Itoa(int(r.Id))+" name: "+r.Name+" age: "+strconv.Itoa(int(r.Age))+" profession:"+r.Profession)
+	responseStudentInfo(w, r)
 }
 
 func alterProfessionHandler(w http.ResponseWriter, req *http.Request) {
@@ -162,11 +170,30 @@ func deleteHandler(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, strconv.FormatBool(r.Res))
 }
 
+func queryListHandler(w http.ResponseWriter, _ *http.Request) {
+
+	conn, ctx, cancel := connectWithGrpc()
+	c := pb.NewServiceClient(conn)
+	defer conn.Close()
+	defer cancel()
+
+	r, err := c.QueryList(ctx, &pb.QueryRequest{})
+	if err != nil {
+		log.Printf("%v", err)
+		return
+	}
+	log.Print("query list success")
+	for _, studentInfo := range r.StudentInfo {
+		responseStudentInfo(w, studentInfo)
+	}
+}
+
 func main() {
 	http.HandleFunc("/hello", helloHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/query", queryHandler)
 	http.HandleFunc("/alterProfession", alterProfessionHandler)
 	http.HandleFunc("/delete", deleteHandler)
+	http.HandleFunc("/queryList", queryListHandler)
 	log.Fatal(http.ListenAndServe(":8088", nil))
 }
