@@ -6,7 +6,6 @@ import (
 	"errors"
 	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
-	"hash/crc32"
 	"log"
 	"net"
 	"sync"
@@ -19,26 +18,25 @@ type Server struct {
 }
 
 type student struct {
-	id         int32  //唯一
+	id         string //唯一
 	name       string //仅支持英文，非空
 	age        int32  //非空，范围【10，100】
 	profession string //枚举：计算机科学与技术/软件工程
 }
 type safeStudentInfo struct {
-	studentInfo map[int32]student
-	mux         sync.Mutex
+	studentInfo map[string]student
+	mux         sync.RWMutex
 }
 
-var allStudentInfo = safeStudentInfo{studentInfo: make(map[int32]student)}
+var allStudentInfo = safeStudentInfo{studentInfo: make(map[string]student)}
 
-func getUUID() int {
+func getUUID() string {
 
 	v4, err := uuid.NewV4()
 	if err != nil {
 		log.Fatal("v4 create err")
 	}
-	uuidHash := int(crc32.ChecksumIEEE([]byte(v4.String())))
-	return uuidHash
+	return v4.String()
 }
 
 // SayHello implements helloworld.GreeterServer
@@ -51,14 +49,14 @@ func (s *Server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloRepl
 func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.RegisterReply, error) {
 
 	newStudent := student{
-		id:         int32(getUUID()),
+		id:         getUUID(),
 		name:       info.GetName(),
 		age:        info.GetAge(),
 		profession: info.GetProfession(),
 	}
 	allStudentInfo.mux.Lock()
 	allStudentInfo.studentInfo[newStudent.id] = newStudent
-	allStudentInfo.mux.Unlock()
+	defer allStudentInfo.mux.Unlock()
 	log.Printf("register %v success", newStudent.id)
 	return &pb.RegisterReply{Id: newStudent.id}, nil
 }
@@ -66,7 +64,7 @@ func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.Regi
 func (s *Server) Query(_ context.Context, studentId *pb.StudentInfo) (*pb.StudentInfo, error) {
 	allStudentInfo.mux.Lock()
 	studentInfo, ok := allStudentInfo.studentInfo[studentId.Id]
-	allStudentInfo.mux.Unlock()
+	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
 		return &pb.StudentInfo{}, errors.New("student is nor exist")
@@ -83,7 +81,7 @@ func (s *Server) Query(_ context.Context, studentId *pb.StudentInfo) (*pb.Studen
 func (s *Server) AlterProfession(_ context.Context, alterInfo *pb.StudentInfo) (*pb.Result, error) {
 	allStudentInfo.mux.Lock()
 	studentInfo, ok := allStudentInfo.studentInfo[alterInfo.Id]
-	allStudentInfo.mux.Unlock()
+	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
 		return &pb.Result{Res: false}, errors.New("student is nor exist")
@@ -96,14 +94,12 @@ func (s *Server) AlterProfession(_ context.Context, alterInfo *pb.StudentInfo) (
 func (s *Server) Delete(_ context.Context, studentId *pb.StudentInfo) (*pb.Result, error) {
 	allStudentInfo.mux.Lock()
 	_, ok := allStudentInfo.studentInfo[studentId.Id]
-	allStudentInfo.mux.Unlock()
+	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
 		return &pb.Result{Res: false}, errors.New("student is nor exist")
 	}
-	allStudentInfo.mux.Lock()
 	delete(allStudentInfo.studentInfo, studentId.Id)
-	allStudentInfo.mux.Unlock()
 	log.Printf("delete student %v success", studentId.Id)
 	return &pb.Result{Res: true}, nil
 }

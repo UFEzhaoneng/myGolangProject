@@ -20,7 +20,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots)
 
-	res2, err := http.PostForm("http://127.0.0.1:8088/query", url.Values{"id": {"-387200533"}})
+	res2, err := http.PostForm("http://127.0.0.1:8088/query", url.Values{"id": {"e20c2233-4e4f-48f7-8536-7ee64be86b0a"}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots2)
 
-	res3, err := http.PostForm("http://127.0.0.1:8088/alterProfession", url.Values{"id": {"-387200533"}, "profession": {"软件工程"}})
+	res3, err := http.PostForm("http://127.0.0.1:8088/alterProfession", url.Values{"id": {"e20c2233-4e4f-48f7-8536-7ee64be86b0a"}, "profession": {"软件工程"}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots3)
 
-	res4, err := http.PostForm("http://127.0.0.1:8088/delete", url.Values{"id": {"-387200533"}})
+	res4, err := http.PostForm("http://127.0.0.1:8088/delete", url.Values{"id": {"e20c2233-4e4f-48f7-8536-7ee64be86b0a"}})
 	if err != nil {
 		log.Fatal(err)
 	}

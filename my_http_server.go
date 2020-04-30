@@ -92,15 +92,15 @@ func registerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("register: %v success", r.Id)
-	io.WriteString(w, strconv.Itoa(int(r.Id)))
+	io.WriteString(w, r.Id)
 }
 
-func idCheck(w http.ResponseWriter, req *http.Request) (int, bool) {
-	id, err := strconv.Atoi(req.PostFormValue("id"))
-	if err != nil {
-		log.Printf("id error: %v", err)
+func idCheck(w http.ResponseWriter, req *http.Request) (string, bool) {
+	id := req.PostFormValue("id")
+	if id == "" {
+		log.Printf("id is nil")
 		io.WriteString(w, "query error")
-		return 0, false
+		return "", false
 	}
 	return id, true
 }
@@ -126,14 +126,14 @@ func queryHandler(w http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 	defer cancel()
 
-	r, err := c.Query(ctx, &pb.StudentInfo{Id: int32(id)})
+	r, err := c.Query(ctx, &pb.StudentInfo{Id: id})
 	if err != nil {
 		log.Printf("%v", err)
 		io.WriteString(w, "query error")
 		return
 	}
 	log.Printf("query: %v success", id)
-	io.WriteString(w, "id: "+strconv.Itoa(int(r.Id))+" name: "+r.Name+" age: "+strconv.Itoa(int(r.Age))+" profession:"+r.Profession)
+	io.WriteString(w, "id: "+r.Id+" name: "+r.Name+" age: "+strconv.Itoa(int(r.Age))+" profession:"+r.Profession)
 }
 
 func alterProfessionHandler(w http.ResponseWriter, req *http.Request) {
@@ -151,7 +151,7 @@ func alterProfessionHandler(w http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 	defer cancel()
 
-	r, err := c.AlterProfession(ctx, &pb.StudentInfo{Id: int32(id), Profession: profession})
+	r, err := c.AlterProfession(ctx, &pb.StudentInfo{Id: id, Profession: profession})
 	if err != nil {
 		log.Printf("%v", err)
 		io.WriteString(w, "alter error")
@@ -172,7 +172,7 @@ func deleteHandler(w http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 	defer cancel()
 
-	r, err := c.Delete(ctx, &pb.StudentInfo{Id: int32(id)})
+	r, err := c.Delete(ctx, &pb.StudentInfo{Id: id})
 	if err != nil {
 		log.Printf("%v", err)
 		io.WriteString(w, "delete error")
