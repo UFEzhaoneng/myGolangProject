@@ -1,4 +1,4 @@
-FROM golang
+FROM golang as builder
 
 # git
 
@@ -11,17 +11,32 @@ RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
     unzip protoc-3.11.4-linux-x86_64.zip -d /usr/local && \
     export PATH=$PATH:/usr/local/bin
 
-RUN export GO111MODULE=on && \
-    export GOPROXY=https://mirrors.aliyun.com/goproxy/ && \
-    go get google.golang.org/grpc@v1.28.1 && \
-    go get github.com/golang/protobuf/protoc-gen-go && \
-    export PATH=$PATH:$GOPATH/bin
+FROM builder as mygolangproject
 
 WORKDIR $GOPATH/src/mygolangproject
 COPY . $GOPATH/src/mygolangproject
-RUN cd  $GOPATH/src/mygolangproject/proto && \
-    protoc --go_out=plugins=grpc:. service.proto && \
-    go build $GOPATH/src/mygolangproject/grpcserver/my_grpc_server.go
 
-EXPOSE 8000
-ENTRYPOINT ["./mygolangproject"]
+FROM mygolangproject as grpc
+RUN export GO111MODULE=on && \
+    export GOPROXY=https://mirrors.aliyun.com/goproxy/ && \
+    go build grpcserver/my_grpc_server.go
+
+EXPOSE 50051
+ENTRYPOINT ["./my_grpc_server"]
+
+FROM mygolangproject as server
+RUN export GO111MODULE=on && \
+    export GOPROXY=https://mirrors.aliyun.com/goproxy/ && \
+    go build my_http_server.go
+
+EXPOSE 8088
+ENTRYPOINT ["./my_http_server"]
+
+
+FROM mygolangproject as client
+RUN export GO111MODULE=on && \
+    export GOPROXY=https://mirrors.aliyun.com/goproxy/ && \
+    go build my_http_client.go
+
+ENTRYPOINT ["./my_http_client"]
+

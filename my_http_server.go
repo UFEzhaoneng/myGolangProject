@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	gprcAddress = "localhost:50051"
+	gprcAddress = "localhost:50052"
 )
 
 func helloHandlerFunc(name string) string {
@@ -195,5 +195,5 @@ func main() {
 	http.HandleFunc("/alterProfession", alterProfessionHandler)
 	http.HandleFunc("/delete", deleteHandler)
 	http.HandleFunc("/queryList", queryListHandler)
-	log.Fatal(http.ListenAndServe(":8088", nil))
+	log.Fatal(http.ListenAndServe(":8089", nil))
 }

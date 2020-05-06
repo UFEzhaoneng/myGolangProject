@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	res, err := http.PostForm("http://127.0.0.1:8088/register", url.Values{"name": {"1"}, "age": {"1"}, "profession": {"软件工程"}})
+	res, err := http.PostForm("http://127.0.0.1:8089/register", url.Values{"name": {"1"}, "age": {"1"}, "profession": {"软件工程"}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,7 +20,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots)
 
-	res2, err := http.PostForm("http://127.0.0.1:8088/query", url.Values{"id": {"1"}})
+	res2, err := http.PostForm("http://127.0.0.1:8089/query", url.Values{"id": {"1"}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots2)
 
-	res3, err := http.PostForm("http://127.0.0.1:8088/alterProfession", url.Values{"id": {"1"}})
+	res3, err := http.PostForm("http://127.0.0.1:8089/alterProfession", url.Values{"id": {"1"}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func main() {
 	}
 	fmt.Printf("%s\n", robots4)*/
 
-	res5, err := http.PostForm("http://127.0.0.1:8088/queryList", url.Values{})
+	res5, err := http.PostForm("http://127.0.0.1:8089/queryList", url.Values{})
 	if err != nil {
 		log.Fatal(err)
 	}

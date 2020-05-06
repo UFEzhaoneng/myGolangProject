@@ -12,7 +12,7 @@ import (
 	pb "mygolangproject/proto"
 )
 
-const port = ":50051"
+const port = ":50052"
 
 type Server struct {
 	pb.UnimplementedServiceServer
