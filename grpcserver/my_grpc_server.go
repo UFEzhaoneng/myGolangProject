@@ -6,8 +6,10 @@ import (
 	"log"
 	"net"
 	"sort"
+	"sync"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	pb "mygolangproject/proto"
 )
@@ -18,22 +20,24 @@ type Server struct {
 	pb.UnimplementedServiceServer
 }
 
-const (
-	computerScienceAndTechnology = "计算机科学与技术"
-	softwareEngineering          = "软件工程"
-)
-
 type student struct {
-	id           int32  //唯一
+	id           string //唯一
 	name         string //仅支持英文，非空
 	age          int32  //非空，范围【10，100】
 	profession   string //枚举：计算机科学与技术/软件工程
 	createTime   int64  //创建时间
 	modifiedTime int64  //修改时间
 }
+type safeStudentInfo struct {
+	studentInfo map[string]student
+	mux         sync.RWMutex
+}
 
-var allStudentInfo = make(map[int32]student)
-var studentId = 0
+var allStudentInfo = safeStudentInfo{studentInfo: make(map[string]student)}
+
+func getUUID() string {
+	return uuid.NewV4().String()
+}
 
 type studentList []student
 
@@ -42,7 +46,7 @@ func (stu studentList) Len() int           { return len(stu) }
 func (stu studentList) Less(i, j int) bool { return stu[i].createTime > stu[j].createTime }
 
 // A function to turn a map into a PairList, then sort and return it.
-func sortByCreateTime(m map[int32]student) studentList {
+func sortByCreateTime(m map[string]student) studentList {
 	p := make(studentList, len(m))
 	i := 0
 	for _, v := range m {
@@ -61,27 +65,26 @@ func (s *Server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloRepl
 
 //Register implements helloworld.GreeterServer
 func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.RegisterReply, error) {
-	if info.Profession != computerScienceAndTechnology && info.Profession != softwareEngineering {
-		log.Printf("register error")
-		return &pb.RegisterReply{}, errors.New("register error")
-	}
-	studentId++
+
 	newStudent := student{
-		id:           int32(studentId),
+		id:           getUUID(),
 		name:         info.GetName(),
 		age:          info.GetAge(),
 		profession:   info.GetProfession(),
 		createTime:   time.Now().Unix(),
 		modifiedTime: time.Now().Unix(),
 	}
-	allStudentInfo[newStudent.id] = newStudent
+	allStudentInfo.mux.Lock()
+	allStudentInfo.studentInfo[newStudent.id] = newStudent
+	defer allStudentInfo.mux.Unlock()
 	log.Printf("register %v success", newStudent.id)
 	return &pb.RegisterReply{Id: newStudent.id}, nil
 }
 
-//查询学生信息
-func (s *Server) Query(_ context.Context, studentId *pb.StudentId) (*pb.StudentInfo, error) {
-	studentInfo, ok := allStudentInfo[studentId.Id]
+func (s *Server) Query(_ context.Context, studentId *pb.StudentInfo) (*pb.StudentInfo, error) {
+	allStudentInfo.mux.Lock()
+	studentInfo, ok := allStudentInfo.studentInfo[studentId.Id]
+	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
 		return &pb.StudentInfo{}, errors.New("student is nor exist")
@@ -95,38 +98,38 @@ func (s *Server) Query(_ context.Context, studentId *pb.StudentId) (*pb.StudentI
 	}, nil
 }
 
-//更改学生专业
-func (s *Server) AlterProfession(_ context.Context, studentId *pb.StudentId) (*pb.Result, error) {
-	studentInfo, ok := allStudentInfo[studentId.Id]
+func (s *Server) AlterProfession(_ context.Context, alterInfo *pb.StudentInfo) (*pb.Result, error) {
+	allStudentInfo.mux.Lock()
+	studentInfo, ok := allStudentInfo.studentInfo[alterInfo.Id]
+	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
 		return &pb.Result{Res: false}, errors.New("student is nor exist")
 	}
-	if studentInfo.profession == computerScienceAndTechnology {
-		studentInfo.profession = softwareEngineering
-	} else {
-		studentInfo.profession = computerScienceAndTechnology
-	}
+	studentInfo.profession = alterInfo.Profession
 	studentInfo.modifiedTime = time.Now().Unix()
-	allStudentInfo[studentId.Id] = studentInfo
-	log.Printf("Alter student %v profession success", studentId.Id)
+	allStudentInfo.studentInfo[alterInfo.Id] = studentInfo
+	log.Printf("Alter student %v profession success", alterInfo.Id)
 	return &pb.Result{Res: true}, nil
 }
 
-//删除学生信息
-func (s *Server) Delete(_ context.Context, studentId *pb.StudentId) (*pb.Result, error) {
-	_, ok := allStudentInfo[studentId.Id]
+func (s *Server) Delete(_ context.Context, studentId *pb.StudentInfo) (*pb.Result, error) {
+	allStudentInfo.mux.Lock()
+	_, ok := allStudentInfo.studentInfo[studentId.Id]
+	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
 		return &pb.Result{Res: false}, errors.New("student is nor exist")
 	}
-	delete(allStudentInfo, studentId.Id)
+	delete(allStudentInfo.studentInfo, studentId.Id)
 	log.Printf("delete student %v success", studentId.Id)
 	return &pb.Result{Res: true}, nil
 }
 
 func (s *Server) QueryList(_ context.Context, _ *pb.QueryRequest) (*pb.StudentList, error) {
-	list := sortByCreateTime(allStudentInfo)
+	allStudentInfo.mux.Lock()
+	defer allStudentInfo.mux.Unlock()
+	list := sortByCreateTime(allStudentInfo.studentInfo)
 	studentList := &pb.StudentList{}
 	for _, studentInfo := range list {
 		studentInfo := &pb.StudentInfo{

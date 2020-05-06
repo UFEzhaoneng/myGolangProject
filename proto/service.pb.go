@@ -160,47 +160,6 @@ func (m *RegisterRequest) GetProfession() string {
 	return ""
 }
 
-//学生Id
-type StudentId struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *StudentId) Reset()         { *m = StudentId{} }
-func (m *StudentId) String() string { return proto.CompactTextString(m) }
-func (*StudentId) ProtoMessage()    {}
-func (*StudentId) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{3}
-}
-
-func (m *StudentId) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StudentId.Unmarshal(m, b)
-}
-func (m *StudentId) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StudentId.Marshal(b, m, deterministic)
-}
-func (m *StudentId) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StudentId.Merge(m, src)
-}
-func (m *StudentId) XXX_Size() int {
-	return xxx_messageInfo_StudentId.Size(m)
-}
-func (m *StudentId) XXX_DiscardUnknown() {
-	xxx_messageInfo_StudentId.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_StudentId proto.InternalMessageInfo
-
-func (m *StudentId) GetId() int32 {
-	if m != nil {
-		return m.Id
-	}
-	return 0
-}
-
-//返回请求
 type Result struct {
 	Res                  bool     `protobuf:"varint,1,opt,name=res,proto3" json:"res,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -212,7 +171,7 @@ func (m *Result) Reset()         { *m = Result{} }
 func (m *Result) String() string { return proto.CompactTextString(m) }
 func (*Result) ProtoMessage()    {}
 func (*Result) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{4}
+	return fileDescriptor_a0b84a42fa06f626, []int{3}
 }
 
 func (m *Result) XXX_Unmarshal(b []byte) error {
@@ -242,7 +201,7 @@ func (m *Result) GetRes() bool {
 
 // The register message containing the student info.
 type StudentInfo struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Age                  int32    `protobuf:"varint,3,opt,name=age,proto3" json:"age,omitempty"`
 	Profession           string   `protobuf:"bytes,4,opt,name=profession,proto3" json:"profession,omitempty"`
@@ -257,7 +216,7 @@ func (m *StudentInfo) Reset()         { *m = StudentInfo{} }
 func (m *StudentInfo) String() string { return proto.CompactTextString(m) }
 func (*StudentInfo) ProtoMessage()    {}
 func (*StudentInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{5}
+	return fileDescriptor_a0b84a42fa06f626, []int{4}
 }
 
 func (m *StudentInfo) XXX_Unmarshal(b []byte) error {
@@ -278,11 +237,11 @@ func (m *StudentInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StudentInfo proto.InternalMessageInfo
 
-func (m *StudentInfo) GetId() int32 {
+func (m *StudentInfo) GetId() string {
 	if m != nil {
 		return m.Id
 	}
-	return 0
+	return ""
 }
 
 func (m *StudentInfo) GetName() string {
@@ -322,7 +281,7 @@ func (m *StudentInfo) GetModifiedTime() int64 {
 
 // The response message
 type RegisterReply struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -332,7 +291,7 @@ func (m *RegisterReply) Reset()         { *m = RegisterReply{} }
 func (m *RegisterReply) String() string { return proto.CompactTextString(m) }
 func (*RegisterReply) ProtoMessage()    {}
 func (*RegisterReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{6}
+	return fileDescriptor_a0b84a42fa06f626, []int{5}
 }
 
 func (m *RegisterReply) XXX_Unmarshal(b []byte) error {
@@ -353,11 +312,11 @@ func (m *RegisterReply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RegisterReply proto.InternalMessageInfo
 
-func (m *RegisterReply) GetId() int32 {
+func (m *RegisterReply) GetId() string {
 	if m != nil {
 		return m.Id
 	}
-	return 0
+	return ""
 }
 
 // 所有学生的信息
@@ -372,7 +331,7 @@ func (m *StudentList) Reset()         { *m = StudentList{} }
 func (m *StudentList) String() string { return proto.CompactTextString(m) }
 func (*StudentList) ProtoMessage()    {}
 func (*StudentList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{7}
+	return fileDescriptor_a0b84a42fa06f626, []int{6}
 }
 
 func (m *StudentList) XXX_Unmarshal(b []byte) error {
@@ -410,7 +369,7 @@ func (m *QueryRequest) Reset()         { *m = QueryRequest{} }
 func (m *QueryRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryRequest) ProtoMessage()    {}
 func (*QueryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{8}
+	return fileDescriptor_a0b84a42fa06f626, []int{7}
 }
 
 func (m *QueryRequest) XXX_Unmarshal(b []byte) error {
@@ -435,7 +394,6 @@ func init() {
 	proto.RegisterType((*HelloRequest)(nil), "proto.HelloRequest")
 	proto.RegisterType((*HelloReply)(nil), "proto.HelloReply")
 	proto.RegisterType((*RegisterRequest)(nil), "proto.RegisterRequest")
-	proto.RegisterType((*StudentId)(nil), "proto.StudentId")
 	proto.RegisterType((*Result)(nil), "proto.Result")
 	proto.RegisterType((*StudentInfo)(nil), "proto.StudentInfo")
 	proto.RegisterType((*RegisterReply)(nil), "proto.RegisterReply")
@@ -448,33 +406,32 @@ func init() {
 }
 
 var fileDescriptor_a0b84a42fa06f626 = []byte{
-	// 409 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0x5d, 0x8b, 0xd3, 0x40,
-	0x14, 0xcd, 0xc7, 0x26, 0xdb, 0xde, 0xb6, 0xbb, 0xeb, 0x55, 0x24, 0x44, 0xd0, 0x30, 0x0f, 0x12,
-	0x10, 0x56, 0x58, 0x8b, 0x0f, 0xbe, 0x89, 0x3e, 0x28, 0xf8, 0xa0, 0x53, 0xc1, 0xe7, 0xb8, 0xb9,
-	0x5d, 0x06, 0xf2, 0xe5, 0xcc, 0x44, 0xc8, 0x2f, 0xf2, 0xa7, 0xf8, 0xb7, 0x64, 0xa6, 0x49, 0x9b,
-	0xa6, 0x2a, 0xfb, 0xd4, 0xdb, 0x33, 0xe7, 0xde, 0x9c, 0x73, 0xee, 0x85, 0x95, 0x22, 0xf9, 0x53,
-	0xdc, 0xd2, 0x75, 0x23, 0x6b, 0x5d, 0x63, 0x60, 0x7f, 0x18, 0x83, 0xe5, 0x07, 0x2a, 0x8a, 0x9a,
-	0xd3, 0x8f, 0x96, 0x94, 0x46, 0x84, 0xb3, 0x2a, 0x2b, 0x29, 0x72, 0x13, 0x37, 0x9d, 0x73, 0x5b,
-	0xb3, 0xe7, 0x00, 0x3d, 0xa7, 0x29, 0x3a, 0x8c, 0xe0, 0xbc, 0x24, 0xa5, 0xb2, 0xbb, 0x81, 0x34,
-	0xfc, 0x65, 0xdf, 0xe0, 0x92, 0xd3, 0x9d, 0x50, 0x9a, 0xe4, 0x7f, 0xc6, 0xe1, 0x15, 0xf8, 0xa6,
-	0xd9, 0x4b, 0xdc, 0x34, 0xe0, 0xa6, 0xc4, 0xa7, 0x00, 0x8d, 0xac, 0xb7, 0xa4, 0x94, 0xa8, 0xab,
-	0xc8, 0xb7, 0xdc, 0x11, 0xc2, 0x9e, 0xc0, 0x7c, 0xa3, 0xdb, 0x9c, 0x2a, 0xfd, 0x31, 0xc7, 0x0b,
-	0xf0, 0x44, 0x6e, 0x07, 0x06, 0xdc, 0x13, 0x39, 0x8b, 0x21, 0xe4, 0xa4, 0xda, 0x42, 0x9b, 0xc1,
-	0x92, 0x94, 0x7d, 0x9a, 0x71, 0x53, 0xb2, 0x5f, 0x2e, 0x2c, 0x86, 0xce, 0x6a, 0x5b, 0x4f, 0x7b,
-	0xf7, 0xf2, 0xbc, 0x53, 0x79, 0xfe, 0xbf, 0xe4, 0x9d, 0x4d, 0xe5, 0x99, 0xf7, 0x5b, 0x49, 0x99,
-	0xa6, 0xaf, 0xa2, 0xa4, 0x28, 0x48, 0xdc, 0xd4, 0xe7, 0x23, 0x04, 0x19, 0x2c, 0xcb, 0x3a, 0x17,
-	0x5b, 0x41, 0xb9, 0x65, 0x84, 0x96, 0x71, 0x84, 0xb1, 0x67, 0xb0, 0x3a, 0x64, 0x67, 0x62, 0x9e,
-	0xda, 0x7c, 0xb7, 0x77, 0xf2, 0x49, 0x28, 0x8d, 0x6b, 0x58, 0xa8, 0x83, 0xb1, 0xc8, 0x4d, 0xfc,
-	0x74, 0x71, 0x83, 0xbb, 0xdd, 0x5e, 0x8f, 0x2c, 0xf3, 0x31, 0x8d, 0x5d, 0xc0, 0xf2, 0x4b, 0x4b,
-	0xb2, 0xeb, 0xd7, 0x73, 0xf3, 0xdb, 0x83, 0xf3, 0xcd, 0xee, 0x2c, 0x70, 0x0d, 0xb3, 0x4d, 0xd6,
-	0xd9, 0x45, 0xe3, 0xc3, 0x7e, 0xd0, 0xf8, 0x34, 0xe2, 0x07, 0xc7, 0x60, 0x53, 0x74, 0xcc, 0xc1,
-	0x37, 0x30, 0x1b, 0x74, 0xe3, 0xe3, 0x9e, 0x30, 0x39, 0x82, 0xf8, 0xd1, 0x09, 0xbe, 0xeb, 0x7d,
-	0x09, 0x81, 0x55, 0x83, 0x57, 0x13, 0xdd, 0x79, 0xfc, 0x17, 0x27, 0xcc, 0xc1, 0x35, 0x5c, 0xbe,
-	0x2d, 0x34, 0xc9, 0xcf, 0x87, 0xec, 0x4f, 0x5b, 0x57, 0xfb, 0xaf, 0x99, 0xa3, 0x60, 0x0e, 0xbe,
-	0x80, 0xf0, 0x3d, 0x15, 0xa4, 0xe9, 0x3e, 0xe4, 0xd7, 0x30, 0xb7, 0x9a, 0x6c, 0xc8, 0x43, 0x0c,
-	0xe3, 0xcc, 0xa6, 0xd2, 0x0c, 0x91, 0x39, 0xdf, 0x43, 0x0b, 0xbe, 0xfa, 0x13, 0x00, 0x00, 0xff,
-	0xff, 0x76, 0xfb, 0xc4, 0xad, 0x66, 0x03, 0x00, 0x00,
+	// 398 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0xf5, 0x47, 0xed, 0xa6, 0x93, 0xa4, 0x85, 0x01, 0x21, 0xcb, 0x07, 0xb0, 0xf6, 0x80, 0x7c,
+	0xa1, 0x12, 0xa5, 0xea, 0x81, 0x1b, 0x82, 0x03, 0x48, 0x1c, 0x60, 0x83, 0xc4, 0xd9, 0xd4, 0x93,
+	0x68, 0x25, 0x7f, 0xb1, 0xbb, 0x46, 0xf2, 0x2f, 0xe2, 0xd7, 0xf0, 0x9f, 0xd0, 0x6e, 0xec, 0xc4,
+	0x71, 0x02, 0xea, 0xc9, 0xe3, 0xe7, 0x37, 0x33, 0x6f, 0xde, 0x33, 0x2c, 0x15, 0xc9, 0x5f, 0xe2,
+	0x9e, 0xae, 0x1b, 0x59, 0xeb, 0x1a, 0x03, 0xfb, 0x60, 0x0c, 0x16, 0x1f, 0xa9, 0x28, 0x6a, 0x4e,
+	0x3f, 0x5b, 0x52, 0x1a, 0x11, 0xce, 0xaa, 0xac, 0xa4, 0xc8, 0x4d, 0xdc, 0xf4, 0x82, 0xdb, 0x9a,
+	0xbd, 0x04, 0xe8, 0x39, 0x4d, 0xd1, 0x61, 0x04, 0xe7, 0x25, 0x29, 0x95, 0x6d, 0x06, 0xd2, 0xf0,
+	0xca, 0xbe, 0xc3, 0x15, 0xa7, 0x8d, 0x50, 0x9a, 0xe4, 0x7f, 0xc6, 0xe1, 0x23, 0xf0, 0x4d, 0xb3,
+	0x97, 0xb8, 0x69, 0xc0, 0x4d, 0x89, 0xcf, 0x01, 0x1a, 0x59, 0xaf, 0x49, 0x29, 0x51, 0x57, 0x91,
+	0x6f, 0xb9, 0x23, 0x84, 0xc5, 0x10, 0x72, 0x52, 0x6d, 0xa1, 0x4d, 0xaf, 0x24, 0x65, 0xc7, 0xcd,
+	0xb8, 0x29, 0xd9, 0x6f, 0x17, 0xe6, 0x2b, 0xdd, 0xe6, 0x54, 0xe9, 0x4f, 0xd5, 0xba, 0xc6, 0x4b,
+	0xf0, 0x44, 0xde, 0xef, 0xf3, 0x44, 0xbe, 0x53, 0xe0, 0x1d, 0x2b, 0xf0, 0xff, 0xa5, 0xe0, 0x6c,
+	0xaa, 0xc0, 0x7c, 0xbf, 0x97, 0x94, 0x69, 0xfa, 0x26, 0x4a, 0x8a, 0x82, 0xc4, 0x4d, 0x7d, 0x3e,
+	0x42, 0x90, 0xc1, 0xa2, 0xac, 0x73, 0xb1, 0x16, 0x94, 0x5b, 0x46, 0x68, 0x19, 0x07, 0x18, 0x7b,
+	0x01, 0xcb, 0xbd, 0x3d, 0xc6, 0xc9, 0x89, 0x54, 0xf6, 0x7e, 0x77, 0xc9, 0x67, 0xa1, 0x34, 0xde,
+	0xc2, 0x5c, 0xed, 0x0f, 0x8b, 0xdc, 0xc4, 0x4f, 0xe7, 0x37, 0xb8, 0x8d, 0xef, 0x7a, 0x74, 0x32,
+	0x1f, 0xd3, 0xd8, 0x25, 0x2c, 0xbe, 0xb6, 0x24, 0xbb, 0x3e, 0x81, 0x9b, 0x3f, 0x1e, 0x9c, 0xaf,
+	0xb6, 0xc9, 0xe3, 0x2d, 0xcc, 0x56, 0x59, 0x67, 0xb3, 0xc4, 0x27, 0xfd, 0xa0, 0x71, 0xfa, 0xf1,
+	0xe3, 0x43, 0xb0, 0x29, 0x3a, 0xe6, 0xe0, 0x5b, 0x98, 0x0d, 0xba, 0xf1, 0x59, 0x4f, 0x98, 0xe4,
+	0x1c, 0x3f, 0x3d, 0xc2, 0xb7, 0xbd, 0xaf, 0x21, 0xb0, 0x6a, 0xf0, 0x84, 0xee, 0xf8, 0x04, 0xc6,
+	0x1c, 0xbc, 0x83, 0xab, 0x77, 0x85, 0x26, 0xf9, 0x65, 0xef, 0xfe, 0xa9, 0xe6, 0xe5, 0x6e, 0xa3,
+	0xf9, 0x31, 0x98, 0x83, 0xaf, 0x20, 0xfc, 0x40, 0x05, 0x69, 0x7a, 0x18, 0xfd, 0x0e, 0x2e, 0xac,
+	0x32, 0x6b, 0xf5, 0x60, 0xc6, 0xd8, 0xb9, 0xa9, 0x3c, 0x43, 0x64, 0xce, 0x8f, 0xd0, 0x82, 0x6f,
+	0xfe, 0x06, 0x00, 0x00, 0xff, 0xff, 0xbf, 0x1d, 0x13, 0xb6, 0x4f, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -494,11 +451,11 @@ type ServiceClient interface {
 	// 创建学生信息
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterReply, error)
 	//查询学生信息
-	Query(ctx context.Context, in *StudentId, opts ...grpc.CallOption) (*StudentInfo, error)
+	Query(ctx context.Context, in *StudentInfo, opts ...grpc.CallOption) (*StudentInfo, error)
 	//修改学生专业
-	AlterProfession(ctx context.Context, in *StudentId, opts ...grpc.CallOption) (*Result, error)
+	AlterProfession(ctx context.Context, in *StudentInfo, opts ...grpc.CallOption) (*Result, error)
 	//删除学生
-	Delete(ctx context.Context, in *StudentId, opts ...grpc.CallOption) (*Result, error)
+	Delete(ctx context.Context, in *StudentInfo, opts ...grpc.CallOption) (*Result, error)
 	//查询所有学生信息
 	QueryList(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*StudentList, error)
 }
@@ -529,7 +486,7 @@ func (c *serviceClient) Register(ctx context.Context, in *RegisterRequest, opts 
 	return out, nil
 }
 
-func (c *serviceClient) Query(ctx context.Context, in *StudentId, opts ...grpc.CallOption) (*StudentInfo, error) {
+func (c *serviceClient) Query(ctx context.Context, in *StudentInfo, opts ...grpc.CallOption) (*StudentInfo, error) {
 	out := new(StudentInfo)
 	err := c.cc.Invoke(ctx, "/proto.Service/Query", in, out, opts...)
 	if err != nil {
@@ -538,7 +495,7 @@ func (c *serviceClient) Query(ctx context.Context, in *StudentId, opts ...grpc.C
 	return out, nil
 }
 
-func (c *serviceClient) AlterProfession(ctx context.Context, in *StudentId, opts ...grpc.CallOption) (*Result, error) {
+func (c *serviceClient) AlterProfession(ctx context.Context, in *StudentInfo, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
 	err := c.cc.Invoke(ctx, "/proto.Service/AlterProfession", in, out, opts...)
 	if err != nil {
@@ -547,7 +504,7 @@ func (c *serviceClient) AlterProfession(ctx context.Context, in *StudentId, opts
 	return out, nil
 }
 
-func (c *serviceClient) Delete(ctx context.Context, in *StudentId, opts ...grpc.CallOption) (*Result, error) {
+func (c *serviceClient) Delete(ctx context.Context, in *StudentInfo, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
 	err := c.cc.Invoke(ctx, "/proto.Service/Delete", in, out, opts...)
 	if err != nil {
@@ -572,11 +529,11 @@ type ServiceServer interface {
 	// 创建学生信息
 	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
 	//查询学生信息
-	Query(context.Context, *StudentId) (*StudentInfo, error)
+	Query(context.Context, *StudentInfo) (*StudentInfo, error)
 	//修改学生专业
-	AlterProfession(context.Context, *StudentId) (*Result, error)
+	AlterProfession(context.Context, *StudentInfo) (*Result, error)
 	//删除学生
-	Delete(context.Context, *StudentId) (*Result, error)
+	Delete(context.Context, *StudentInfo) (*Result, error)
 	//查询所有学生信息
 	QueryList(context.Context, *QueryRequest) (*StudentList, error)
 }
@@ -591,13 +548,13 @@ func (*UnimplementedServiceServer) SayHello(ctx context.Context, req *HelloReque
 func (*UnimplementedServiceServer) Register(ctx context.Context, req *RegisterRequest) (*RegisterReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (*UnimplementedServiceServer) Query(ctx context.Context, req *StudentId) (*StudentInfo, error) {
+func (*UnimplementedServiceServer) Query(ctx context.Context, req *StudentInfo) (*StudentInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
 }
-func (*UnimplementedServiceServer) AlterProfession(ctx context.Context, req *StudentId) (*Result, error) {
+func (*UnimplementedServiceServer) AlterProfession(ctx context.Context, req *StudentInfo) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AlterProfession not implemented")
 }
-func (*UnimplementedServiceServer) Delete(ctx context.Context, req *StudentId) (*Result, error) {
+func (*UnimplementedServiceServer) Delete(ctx context.Context, req *StudentInfo) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (*UnimplementedServiceServer) QueryList(ctx context.Context, req *QueryRequest) (*StudentList, error) {
@@ -645,7 +602,7 @@ func _Service_Register_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Service_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StudentId)
+	in := new(StudentInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -657,13 +614,13 @@ func _Service_Query_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: "/proto.Service/Query",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).Query(ctx, req.(*StudentId))
+		return srv.(ServiceServer).Query(ctx, req.(*StudentInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Service_AlterProfession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StudentId)
+	in := new(StudentInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -675,13 +632,13 @@ func _Service_AlterProfession_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/proto.Service/AlterProfession",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).AlterProfession(ctx, req.(*StudentId))
+		return srv.(ServiceServer).AlterProfession(ctx, req.(*StudentInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Service_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StudentId)
+	in := new(StudentInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -693,7 +650,7 @@ func _Service_Delete_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/proto.Service/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).Delete(ctx, req.(*StudentId))
+		return srv.(ServiceServer).Delete(ctx, req.(*StudentInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }

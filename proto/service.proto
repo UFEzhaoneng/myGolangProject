@@ -11,16 +11,16 @@ service Service {
   rpc Register (RegisterRequest) returns (RegisterReply) {}
 
   //查询学生信息
-  rpc Query (StudentId) returns (StudentInfo) {}
+  rpc Query (StudentInfo) returns (StudentInfo) {}
 
   //修改学生专业
-  rpc AlterProfession (StudentId) returns (Result) {}
+  rpc AlterProfession(StudentInfo) returns (Result) {}
 
   //删除学生
-  rpc Delete (StudentId) returns (Result) {}
+  rpc Delete(StudentInfo) returns (Result) {}
 
   //查询所有学生信息
-  rpc QueryList (QueryRequest) returns (StudentList) {}
+    rpc QueryList (QueryRequest) returns (StudentList) {}
 }
 
 // The request message containing the user's name(addr).
@@ -40,29 +40,23 @@ message RegisterRequest {
   string profession  = 3;
 }
 
-//学生Id
-message StudentId {
-  string id = 1;
-}
-
-//返回请求
 message Result {
   bool res = 1;
 }
 
 // The register message containing the student info.
 message StudentInfo {
-  int32 id           = 1;
-  string name        = 2;
-  int32 age          = 3;
-  string profession  = 4;
+  string id          = 1;
+  string name       = 2;
+  int32 age         = 3;
+  string profession = 4;
   int64 createTime   = 5;
-  int64 modifiedTime = 6;
+    int64 modifiedTime = 6;
 }
 
 // The response message
 message RegisterReply {
-  int32 id = 1;
+  string id = 1;
 }
 
 // 所有学生的信息

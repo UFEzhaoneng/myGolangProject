@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -13,8 +14,12 @@ import (
 )
 
 const (
-	gprcAddress = "localhost:50052"
+	gprcAddress                  = "localhost:50052"
+	computerScienceAndTechnology = "计算机科学与技术"
+	softwareEngineering          = "软件工程"
 )
+
+var nameCheck = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 
 func helloHandlerFunc(name string) string {
 	conn, ctx, cancel := connectWithGrpc()
@@ -51,21 +56,19 @@ func helloHandler(w http.ResponseWriter, req *http.Request) {
 func registerInfoCheck(w http.ResponseWriter, req *http.Request) (bool, string, int, string) {
 	isOk := true
 	name := req.PostFormValue("name")
-	if name == "" {
-		io.WriteString(w, "error")
+	if name == "" || !nameCheck(name) {
+		io.WriteString(w, "name error")
 		log.Print("name error")
 		isOk = false
 	}
 	age, err := strconv.Atoi(req.PostFormValue("age"))
-	if err != nil {
-		io.WriteString(w, "error")
+	if err != nil || age < 10 || age > 100 {
+		io.WriteString(w, "age error")
 		log.Print("age error")
 		isOk = false
 	}
-	profession := req.PostFormValue("profession")
-	if profession == "" {
-		io.WriteString(w, "error")
-		log.Print("profession error")
+	profession, res := professionCheck(w, req)
+	if !res {
 		isOk = false
 	}
 	return isOk, name, age, profession
@@ -89,22 +92,32 @@ func registerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("register: %v success", r.Id)
-	io.WriteString(w, strconv.Itoa(int(r.Id)))
+	io.WriteString(w, r.Id)
 }
 
-func idCheck(w http.ResponseWriter, req *http.Request) (int, bool) {
-	id, err := strconv.Atoi(req.PostFormValue("id"))
-	if err != nil {
-		log.Printf("id error: %v", err)
+func idCheck(w http.ResponseWriter, req *http.Request) (string, bool) {
+	id := req.PostFormValue("id")
+	if id == "" {
+		log.Printf("id is nil")
 		io.WriteString(w, "query error")
-		return 0, false
+		return "", false
 	}
 	return id, true
 }
 
+func professionCheck(w http.ResponseWriter, req *http.Request) (string, bool) {
+	profession := req.PostFormValue("profession")
+	if profession == "" || (profession != computerScienceAndTechnology && profession != softwareEngineering) {
+		log.Print("profession error")
+		io.WriteString(w, "profession error")
+		return "", false
+	}
+	return profession, true
+}
+
 func responseStudentInfo(w http.ResponseWriter, studentInfo *pb.StudentInfo) {
 	io.WriteString(w,
-		"id: "+strconv.Itoa(int(studentInfo.Id))+
+		"id: "+studentInfo.Id+
 			" name: "+studentInfo.Name+
 			" age: "+strconv.Itoa(int(studentInfo.Age))+
 			" profession:"+studentInfo.Profession)
@@ -121,17 +134,23 @@ func queryHandler(w http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 	defer cancel()
 
-	r, err := c.Query(ctx, &pb.StudentId{Id: int32(id)})
+	r, err := c.Query(ctx, &pb.StudentInfo{Id: id})
 	if err != nil {
 		log.Printf("%v", err)
+		io.WriteString(w, "query error")
 		return
 	}
 	log.Printf("query: %v success", id)
+	io.WriteString(w, "id: "+r.Id+" name: "+r.Name+" age: "+strconv.Itoa(int(r.Age))+" profession:"+r.Profession)
 	responseStudentInfo(w, r)
 }
 
 func alterProfessionHandler(w http.ResponseWriter, req *http.Request) {
 	id, res := idCheck(w, req)
+	if !res {
+		return
+	}
+	profession, res := professionCheck(w, req)
 	if !res {
 		return
 	}
@@ -141,9 +160,10 @@ func alterProfessionHandler(w http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 	defer cancel()
 
-	r, err := c.AlterProfession(ctx, &pb.StudentId{Id: int32(id)})
+	r, err := c.AlterProfession(ctx, &pb.StudentInfo{Id: id, Profession: profession})
 	if err != nil {
 		log.Printf("%v", err)
+		io.WriteString(w, "alter error")
 		return
 	}
 	log.Printf("alterProfession: %v success", id)
@@ -161,9 +181,10 @@ func deleteHandler(w http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 	defer cancel()
 
-	r, err := c.Delete(ctx, &pb.StudentId{Id: int32(id)})
+	r, err := c.Delete(ctx, &pb.StudentInfo{Id: id})
 	if err != nil {
 		log.Printf("%v", err)
+		io.WriteString(w, "delete error")
 		return
 	}
 	log.Printf("delete student: %v success", id)
