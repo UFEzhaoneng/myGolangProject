@@ -87,7 +87,7 @@ func (s *Server) Query(_ context.Context, studentId *pb.StudentInfo) (*pb.Studen
 	defer allStudentInfo.mux.Unlock()
 	if !ok {
 		log.Print("student is not exist")
-		return &pb.StudentInfo{}, errors.New("student is nor exist")
+		return &pb.StudentInfo{}, errors.New("student is not exist")
 	}
 	log.Printf("find student %v", studentId.Id)
 	return &pb.StudentInfo{

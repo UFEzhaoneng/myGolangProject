@@ -1,0 +1,12 @@
+FROM golang
+
+WORKDIR $GOPATH/src/mygolangproject
+COPY . $GOPATH/src/mygolangproject
+
+RUN export GO111MODULE=on && \
+    export GOPROXY=https://mirrors.aliyun.com/goproxy/ && \
+    go build grpcserver/my_grpc_server.go
+
+EXPOSE 50052
+ENTRYPOINT ["./my_grpc_server"]
+

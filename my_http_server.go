@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	gprcAddress                  = "localhost:50052"
+	gprcAddress                  = "172.17.0.3:50052"
 	computerScienceAndTechnology = "计算机科学与技术"
 	softwareEngineering          = "软件工程"
 )
