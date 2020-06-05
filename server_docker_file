@@ -8,4 +8,4 @@ RUN export GO111MODULE=on && \
     go build my_http_server.go
 
 EXPOSE 8089
-ENTRYPOINT ["./my_http_server"]
+#ENTRYPOINT ["./my_http_server"]

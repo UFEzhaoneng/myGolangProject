@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"errors"
+	"hash/crc32"
 	"log"
 	"net"
 	"sort"
-	"sync"
+	"strconv"
 	"time"
 
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	pb "mygolangproject/proto"
@@ -20,33 +23,43 @@ type Server struct {
 	pb.UnimplementedServiceServer
 }
 
+func connectMysql() (*gorm.DB, error) {
+	db, err := gorm.Open("mysql", "root:123456@/my_golang_project?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		log.Print("connect mysql error!")
+		return nil, err
+	}
+	if !db.HasTable("students") {
+		if err := db.CreateTable(&student{}).Error; err != nil {
+			log.Print(err)
+			return nil, errors.New("create table error")
+		}
+	}
+	return db, err
+}
+
 type student struct {
-	id           string //唯一
-	name         string //仅支持英文，非空
-	age          int32  //非空，范围【10，100】
-	profession   string //枚举：计算机科学与技术/软件工程
-	createTime   int64  //创建时间
-	modifiedTime int64  //修改时间
-}
-type safeStudentInfo struct {
-	studentInfo map[string]student
-	mux         sync.RWMutex
+	ID         uint
+	Name       string //仅支持英文，非空
+	Age        int32  //非空，范围【10，100】
+	Profession string //枚举：计算机科学与技术/软件工程
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
-var allStudentInfo = safeStudentInfo{studentInfo: make(map[string]student)}
-
-func getUUID() string {
-	return uuid.NewV4().String()
+func getUUID() uint32 {
+	v4 := uuid.NewV4()
+	return crc32.ChecksumIEEE([]byte(v4.String()))
 }
 
 type studentList []student
 
 func (stu studentList) Swap(i, j int)      { stu[i], stu[j] = stu[j], stu[i] }
 func (stu studentList) Len() int           { return len(stu) }
-func (stu studentList) Less(i, j int) bool { return stu[i].createTime > stu[j].createTime }
+func (stu studentList) Less(i, j int) bool { return stu[i].CreatedAt.Unix() > stu[j].CreatedAt.Unix() }
 
 // A function to turn a map into a PairList, then sort and return it.
-func sortByCreateTime(m map[string]student) studentList {
+func sortByCreateTime(m map[int]student) studentList {
 	p := make(studentList, len(m))
 	i := 0
 	for _, v := range m {
@@ -66,79 +79,89 @@ func (s *Server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloRepl
 //Register implements helloworld.GreeterServer
 func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.RegisterReply, error) {
 
-	newStudent := student{
-		id:           getUUID(),
-		name:         info.GetName(),
-		age:          info.GetAge(),
-		profession:   info.GetProfession(),
-		createTime:   time.Now().Unix(),
-		modifiedTime: time.Now().Unix(),
+	db, err := connectMysql()
+	defer db.Close()
+	if err != nil {
+		return nil, err
 	}
-	allStudentInfo.mux.Lock()
-	allStudentInfo.studentInfo[newStudent.id] = newStudent
-	defer allStudentInfo.mux.Unlock()
-	log.Printf("register %v success", newStudent.id)
-	return &pb.RegisterReply{Id: newStudent.id}, nil
+	newStudent := student{
+		ID:         uint(getUUID()),
+		Name:       info.GetName(),
+		Age:        info.GetAge(),
+		Profession: info.GetProfession(),
+	}
+	db.Create(&newStudent)
+	log.Printf("register %v success", newStudent.ID)
+	return &pb.RegisterReply{Id: strconv.Itoa(int(newStudent.ID))}, nil
+}
+
+func studentQuery(id string) (student, *gorm.DB) {
+	db, err := connectMysql()
+	newStudent := student{}
+	if err != nil {
+		return newStudent, db
+	}
+	db.Where("id = ?", id).First(&newStudent)
+	return newStudent, db
 }
 
 func (s *Server) Query(_ context.Context, studentId *pb.StudentInfo) (*pb.StudentInfo, error) {
-	allStudentInfo.mux.Lock()
-	studentInfo, ok := allStudentInfo.studentInfo[studentId.Id]
-	defer allStudentInfo.mux.Unlock()
-	if !ok {
-		log.Print("student is not exist")
+	newStudent, db := studentQuery(studentId.Id)
+	defer db.Close()
+	if newStudent.ID == 0 {
 		return &pb.StudentInfo{}, errors.New("student is not exist")
 	}
 	log.Printf("find student %v", studentId.Id)
 	return &pb.StudentInfo{
-		Id:         studentInfo.id,
-		Name:       studentInfo.name,
-		Age:        studentInfo.age,
-		Profession: studentInfo.profession,
+		Id:         strconv.Itoa(int(newStudent.ID)),
+		Name:       newStudent.Name,
+		Age:        newStudent.Age,
+		Profession: newStudent.Profession,
 	}, nil
 }
 
 func (s *Server) AlterProfession(_ context.Context, alterInfo *pb.StudentInfo) (*pb.Result, error) {
-	allStudentInfo.mux.Lock()
-	studentInfo, ok := allStudentInfo.studentInfo[alterInfo.Id]
-	defer allStudentInfo.mux.Unlock()
-	if !ok {
+	newStudent, db := studentQuery(alterInfo.Id)
+	defer db.Close()
+	if newStudent.ID == 0 {
 		log.Print("student is not exist")
 		return &pb.Result{Res: false}, errors.New("student is nor exist")
 	}
-	studentInfo.profession = alterInfo.Profession
-	studentInfo.modifiedTime = time.Now().Unix()
-	allStudentInfo.studentInfo[alterInfo.Id] = studentInfo
-	log.Printf("Alter student %v profession success", alterInfo.Id)
+
+	db.Model(&newStudent).Update("profession", alterInfo.Profession)
+	log.Printf("Alter student %v Profession success", alterInfo.Id)
 	return &pb.Result{Res: true}, nil
 }
 
 func (s *Server) Delete(_ context.Context, studentId *pb.StudentInfo) (*pb.Result, error) {
-	allStudentInfo.mux.Lock()
-	_, ok := allStudentInfo.studentInfo[studentId.Id]
-	defer allStudentInfo.mux.Unlock()
-	if !ok {
+	newStudent, db := studentQuery(studentId.Id)
+	defer db.Close()
+	if newStudent.ID == 0 {
 		log.Print("student is not exist")
 		return &pb.Result{Res: false}, errors.New("student is nor exist")
 	}
-	delete(allStudentInfo.studentInfo, studentId.Id)
+	db.Delete(&newStudent)
 	log.Printf("delete student %v success", studentId.Id)
 	return &pb.Result{Res: true}, nil
 }
 
 func (s *Server) QueryList(_ context.Context, _ *pb.QueryRequest) (*pb.StudentList, error) {
-	allStudentInfo.mux.Lock()
-	defer allStudentInfo.mux.Unlock()
-	list := sortByCreateTime(allStudentInfo.studentInfo)
 	studentList := &pb.StudentList{}
-	for _, studentInfo := range list {
+	db, err := connectMysql()
+	if err != nil {
+		return nil, err
+	}
+	var students []student
+	defer db.Close()
+	db.Find(&students)
+	for _, studentInfo := range students {
 		studentInfo := &pb.StudentInfo{
-			Id:           studentInfo.id,
-			Name:         studentInfo.name,
-			Age:          studentInfo.age,
-			Profession:   studentInfo.profession,
-			CreateTime:   studentInfo.createTime,
-			ModifiedTime: studentInfo.modifiedTime,
+			Id:           strconv.Itoa(int(studentInfo.ID)),
+			Name:         studentInfo.Name,
+			Age:          studentInfo.Age,
+			Profession:   studentInfo.Profession,
+			CreateTime:   studentInfo.CreatedAt.Unix(),
+			ModifiedTime: studentInfo.UpdatedAt.Unix(),
 		}
 		studentList.StudentInfo = append(studentList.StudentInfo, studentInfo)
 	}

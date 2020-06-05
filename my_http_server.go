@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	gprcAddress                  = "172.17.0.3:50052"
+	gprcAddress = "172.17.0.2:50052"
+	//gprcAddress                  = "127.0.0.1:50052"
 	computerScienceAndTechnology = "计算机科学与技术"
 	softwareEngineering          = "软件工程"
 )
@@ -81,6 +82,7 @@ func registerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	io.WriteString(w, "connect success")
 	conn, ctx, cancel := connectWithGrpc()
 	c := pb.NewServiceClient(conn)
 	defer conn.Close()
@@ -141,7 +143,6 @@ func queryHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("query: %v success", id)
-	io.WriteString(w, "id: "+r.Id+" name: "+r.Name+" age: "+strconv.Itoa(int(r.Age))+" profession:"+r.Profession)
 	responseStudentInfo(w, r)
 }
 
