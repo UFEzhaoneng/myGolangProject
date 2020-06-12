@@ -29,10 +29,8 @@ func connectMysql() *gorm.DB {
 		return nil
 	}
 	if !db.HasTable("students") {
-		if err := db.CreateTable(&student{}).Error; err != nil {
-			log.Fatal(err)
-			return nil
-		}
+		log.Fatal("table not exist!")
+		return nil
 	}
 	return db
 }

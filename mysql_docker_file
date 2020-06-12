@@ -1,9 +1,0 @@
-FROM mysql
-
-ENV MYSQL_ROOT_PASSWORD 123456
-
-RUN mysql service start && \
-    mysql -uroot -p123456 && \
-    create database `my_golang_project`
-
-EXPOSE 50052
