@@ -19,8 +19,6 @@ import (
 
 const port = ":50052"
 
-var count int64
-
 var db = connectMysql()
 
 type Server struct {
