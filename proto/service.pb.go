@@ -479,7 +479,7 @@ func (c *serviceClient) SayHello(ctx context.Context, in *HelloRequest, opts ...
 
 func (c *serviceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterReply, error) {
 	out := new(RegisterReply)
-	err := c.cc.Invoke(ctx, "/proto.Service/Register", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.Service/GRPCRegister", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +546,7 @@ func (*UnimplementedServiceServer) SayHello(ctx context.Context, req *HelloReque
 	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
 }
 func (*UnimplementedServiceServer) Register(ctx context.Context, req *RegisterRequest) (*RegisterReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method GRPCRegister not implemented")
 }
 func (*UnimplementedServiceServer) Query(ctx context.Context, req *StudentInfo) (*StudentInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
@@ -593,7 +593,7 @@ func _Service_Register_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Service/Register",
+		FullMethod: "/proto.Service/GRPCRegister",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ServiceServer).Register(ctx, req.(*RegisterRequest))
@@ -682,7 +682,7 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Service_SayHello_Handler,
 		},
 		{
-			MethodName: "Register",
+			MethodName: "GRPCRegister",
 			Handler:    _Service_Register_Handler,
 		},
 		{

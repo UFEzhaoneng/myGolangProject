@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"log"
 	"net"
 	"time"
@@ -10,16 +13,46 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	uuid "github.com/satori/go.uuid"
-	"google.golang.org/grpc"
+	"mygolangproject/consul"
 	pb "mygolangproject/proto"
 )
 
 const port = ":50052"
 
+var count int64
+
 var db = connectMysql()
 
 type Server struct {
 	pb.UnimplementedServiceServer
+}
+
+func register() {
+
+	defer func() {
+		fmt.Println("启动错误")
+	}()
+	//使用consul注册服务
+	register := consul.NewConsulRegister()
+	register.Port = 50052
+	register.Name = "grpcServer"
+	register.Tag = []string{"grpc"}
+	if err := register.GRPCRegister(); err != nil {
+		panic(err)
+	}
+
+	s := grpc.NewServer()
+
+	grpc_health_v1.RegisterHealthServer(s, &consul.HealthImpl{Status: grpc_health_v1.HealthCheckResponse_SERVING})
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	fmt.Println("grpc server ready listen")
+	pb.RegisterServiceServer(s, &Server{})
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
 
 func connectMysql() *gorm.DB {
@@ -54,7 +87,7 @@ func (s *Server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloRepl
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 
-//Register implements helloworld.GreeterServer
+//GRPCRegister implements helloworld.GreeterServer
 func (s *Server) Register(_ context.Context, info *pb.RegisterRequest) (*pb.RegisterReply, error) {
 	newStudent := student{
 		ID:         getUUID(),
@@ -104,7 +137,7 @@ func (s *Server) AlterProfession(_ context.Context, alterInfo *pb.StudentInfo) (
 	newStudent := studentQuery(alterInfo.Id)
 	if newStudent.ID == "" {
 		log.Print("student is not exist")
-		return &pb.Result{Res: false}, errors.New("student is nor exist")
+		return &pb.Result{Res: false}, errors.New("student is not exist")
 	}
 	tx := db.Begin()
 	if err := tx.Model(&newStudent).Update("profession", alterInfo.Profession).Error; err != nil {
@@ -163,13 +196,5 @@ func (s *Server) QueryList(_ context.Context, _ *pb.QueryRequest) (*pb.StudentLi
 }
 
 func main() {
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	s := grpc.NewServer()
-	pb.RegisterServiceServer(s, &Server{})
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	register()
 }

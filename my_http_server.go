@@ -2,25 +2,56 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/hashicorp/consul/api"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 	"io"
 	"log"
+
+	consulapi "github.com/hashicorp/consul/api"
+	pb "mygolangproject/proto"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
-
-	"google.golang.org/grpc"
-	pb "mygolangproject/proto"
 )
 
 const (
-	//gprcAddress = "172.17.0.2:50052"
-	gprcAddress                  = "127.0.0.1:50052"
 	computerScienceAndTechnology = "计算机科学与技术"
 	softwareEngineering          = "软件工程"
 )
 
+var grpcAddress string
+
 var nameCheck = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
+
+func register() {
+	config := consulapi.DefaultConfig()
+	config.Address = "127.0.0.1:8500"
+	client, err := consulapi.NewClient(config)
+	if err != nil {
+		log.Fatal("consul client error : ", err)
+	}
+
+	registration := new(consulapi.AgentServiceRegistration)
+	registration.ID = "httpServerNode_1"       // 服务节点的名称
+	registration.Name = "httpServer"           // 服务名称
+	registration.Port = 8089                   // 服务端口
+	registration.Tags = []string{"httpServer"} // tag，可以为空
+	registration.Address = "127.0.0.1"         // 服务 IP
+
+	registration.Check = &consulapi.AgentServiceCheck{
+		HTTP:                           fmt.Sprintf("http://%s:%d%s", registration.Address, registration.Port, "/check"),
+		Timeout:                        "3s",
+		Interval:                       "5s",  // 健康检查间隔
+		DeregisterCriticalServiceAfter: "30s", //check失败后30秒删除本服务，注销时间，相当于过期时间
+	}
+	err = client.Agent().ServiceRegister(registration)
+	if err != nil {
+		log.Fatal("register server error : ", err)
+	}
+}
 
 func helloHandlerFunc(name string) string {
 	conn, ctx, cancel := connectWithGrpc()
@@ -36,9 +67,36 @@ func helloHandlerFunc(name string) string {
 	return r.GetMessage()
 }
 
+func grpcDiscovery() {
+	var lastIndex uint64
+	config := api.DefaultConfig()
+	config.Address = "127.0.0.1:8500" //consul server
+
+	client, err := api.NewClient(config)
+	if err != nil {
+		log.Fatal("api new client is failed, err:", err)
+		return
+	}
+	services, metainfo, err := client.Health().Service("grpcServer", "grpc", true, &api.QueryOptions{
+		WaitIndex: lastIndex, // 同步点，这个调用将一直阻塞，直到有新的更新
+	})
+	if err != nil {
+		logrus.Warn("error retrieving instances from Consul: %v", err)
+	}
+	lastIndex = metainfo.LastIndex
+
+	//addrs := map[string]struct{}{}
+	for _, service := range services {
+		log.Println("service.Service.Address:", service.Service.Address, "service.Service.Port:", service.Service.Port)
+		grpcAddress = service.Service.Address + ":" + strconv.Itoa(service.Service.Port)
+		//addrs[net.JoinHostPort(service.Service.Address, strconv.Itoa(service.Service.Port))] = struct{}{}
+	}
+}
+
 func connectWithGrpc() (*grpc.ClientConn, context.Context, context.CancelFunc) {
+
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(gprcAddress, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(grpcAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -209,7 +267,17 @@ func queryListHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+func consulCheck(w http.ResponseWriter, req *http.Request) {
+
+	s := "consulCheck" + "remote:" + req.RemoteAddr + " " + req.URL.String()
+	fmt.Println(s)
+	fmt.Fprintln(w, s)
+}
+
 func main() {
+	register()
+	grpcDiscovery()
+	http.HandleFunc("/check", consulCheck)
 	http.HandleFunc("/hello", helloHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/query", queryHandler)
