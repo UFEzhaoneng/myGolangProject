@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/health/grpc_health_v1"
 	"log"
+	"mygolangproject/consul"
 	"net"
 	"time"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	uuid "github.com/satori/go.uuid"
-	"mygolangproject/consul"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	pb "mygolangproject/proto"
 )
 
@@ -27,21 +28,33 @@ type Server struct {
 
 func register() {
 
-	defer func() {
-		fmt.Println("启动错误")
-	}()
-	//使用consul注册服务
-	register := consul.NewConsulRegister()
-	register.Port = 50052
-	register.Name = "grpcServer"
-	register.Tag = []string{"grpc"}
-	if err := register.GRPCRegister(); err != nil {
-		panic(err)
+	config := consulapi.DefaultConfig()
+	config.Address = "127.0.0.1:8500"
+	client, err := consulapi.NewClient(config)
+	if err != nil {
+		log.Fatal("consul client error : ", err)
 	}
 
-	s := grpc.NewServer()
+	registration := new(consulapi.AgentServiceRegistration)
+	registration.ID = "grpcServerNode"   // 服务节点的名称
+	registration.Name = "grpcServer"     // 服务名称
+	registration.Port = 50052            // 服务端口
+	registration.Tags = []string{"grpc"} // tag，可以为空
+	registration.Address = "127.0.0.1"   // 服务 IP
 
+	registration.Check = &consulapi.AgentServiceCheck{
+		GRPC:                           fmt.Sprintf("%v:%v/%v", registration.Address, registration.Port, registration.Name),
+		Timeout:                        "3s",
+		Interval:                       "5s",  // 健康检查间隔
+		DeregisterCriticalServiceAfter: "30s", //check失败后30秒删除本服务，注销时间，相当于过期时间
+	}
+	s := grpc.NewServer()
 	grpc_health_v1.RegisterHealthServer(s, &consul.HealthImpl{Status: grpc_health_v1.HealthCheckResponse_SERVING})
+	err = client.Agent().ServiceRegister(registration)
+	if err != nil {
+		log.Fatal("register server error : ", err)
+	}
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
