@@ -8,5 +8,5 @@ RUN export GO111MODULE=on && \
     go build grpcserver/my_grpc_server.go
 
 EXPOSE 50052
-ENTRYPOINT ["./my_grpc_server"]
+#ENTRYPOINT ["./my_grpc_server"]
 
